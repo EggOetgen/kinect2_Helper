@@ -1,25 +1,33 @@
 import SimpleOpenNI.*;
 import oscP5.*;
 import netP5.*;
+//import controlP5.*;
 
-OscP5 osc;
-NetAddress dest;
 SimpleOpenNI kinect;
+//OscP5 osc;
+//NetAddress dest;
+//ControlP5 cp5;
+GUI gui;
+
+final int numJoints = 17;
 
 person percy = new person(0);
 PVector[] joints = new PVector[17];
 
 void setup() {
+ size(640, 480);
+ fill(255, 0, 0);
+  
  kinect = new SimpleOpenNI(this);
  kinect.enableDepth();
  kinect.enableUser();// this changed
- size(640, 480);
- fill(255, 0, 0);
+ 
+ gui = new GUI(this);
+
   for (int i = 0; i < joints.length; i++) {
   joints[i] = new PVector();
 }
-  osc = new OscP5(this,8000);
-
+  osc  = new OscP5(this,8000);
   dest = new NetAddress("127.0.0.1",6448);
 }
 
@@ -39,28 +47,25 @@ void draw() {
 
     if ( kinect.isTrackingSkeleton(userId)) {
       msg = "I see you";
-      //drawLimbs(userId);
-      //updateUserJoints(userId);
-      println(userId);
-      percy.draw(userId);
-      // PVector joint = new PVector();
-
-      // float confidence = kinect.getJointPositionSkeleton(userId, i, joint);
-      // if(confidence < 0.5){
-      //    return;
-      // }
+     
+       for (int i = 0; i < numJoints; i++) {
+          percy.updateJoint(i, gui.returnToggleValue(i));
+       }
+       
       
-      // PVector convertedJoint = new PVector();
-      // kinect.convertRealWorldToProjective(joint, joints[0]);
-      // for(int i = 0; i < joints.length; i++)
-      // {
-      //   ellipse(joints[i].x, joints[i].y, 50, 50);
-      // }
+      percy.draw(userId);
+      percy.sendSkeletonData();
+  
     }
+    
   }
 
   message(msg);
   
+       //OscMessage msgOsc = new OscMessage("oeoeoe");
+       //msgOsc.add("tet");
+       
+       //OscP5.flush(msgOsc, dest);
 }
 
 
@@ -105,6 +110,7 @@ void drawJoints(int userId, int jointID)
 void updateUserJoints(int userId)
 {
 
+  
   for(int i = 0; i < joints.length; i++){
       PVector joint = new PVector();
 
@@ -113,14 +119,15 @@ void updateUserJoints(int userId)
       
       PVector convertedJoint = new PVector();
       kinect.convertRealWorldToProjective(joint, joints[i]);
-
-       ellipse(joints[i].x, joints[i].y, 50, 50);
+    //if(gui.sendThisJoint(i)){
+    //   ellipse(joints[i].x, joints[i].y, 50, 50);
        
-       String mesName = str(userId) + "/"+str(i);
-       OscMessage msgOsc = new OscMessage(mesName);
-      msgOsc.add(joints[i].x/width); 
-       msgOsc.add(joints[i].y/height);
-      osc.send(msgOsc, dest);
+    //   String mesName = str(userId) + " / "+str(i);
+    //   OscMessage msgOsc = new OscMessage(mesName);
+    //   msgOsc.add(joints[i].x/width); 
+    //   msgOsc.add(joints[i].y/height);
+    //  osc.send(msgOsc, dest);
+    //   }
   }
 }
 
